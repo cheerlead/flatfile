@@ -3,3 +3,4 @@ resources/*
 Gruntfile.js
 #*.coffee
 node_modules
+test
