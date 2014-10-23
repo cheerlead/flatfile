@@ -1,0 +1,40 @@
+{
+  "name": "flatfile",
+  "version": "0.0.1",
+  "description": "A common way to access data in flat files (e.g. CSV and Excel files)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/cheerlead/flatfile.git"
+  },
+  "keywords": [
+    "csv",
+    "xls",
+    "xslx",
+    "tabular",
+    "flatfile"
+  ],
+  "author": "Anders Lindh <anders.lindh@cheerlead.fi> (http://cheerlead.fi/)",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/cheerlead/flatfile/issues"
+  },
+  "devDependencies": {
+    "mocha": "^1.21.4",
+    "chai": "^1.9.2",
+    "grunt": "^0.4.5",
+    "grunt-simple-mocha": "^0.4.0"
+  },
+  "dependencies": {
+    "csv-parse": "0.0.6",
+    "iconv-lite": "^0.4.4",
+    "jschardet": "^1.1.0",
+    "async": "^0.9.0",
+    "xlsx": "^0.7.11",
+    "xlsjs": "^0.7.1",
+    "underscore": "^1.7.0"
+  }
+}
