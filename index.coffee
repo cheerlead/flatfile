@@ -10,9 +10,9 @@ _ = require 'underscore'
 
 ###############################################################################
 # CSV Parser
-# 
-# Parses CSV files using the csv-parse library. 
- 
+#
+# Parses CSV files using the csv-parse library.
+
 csvParser = (file, opts, callback) ->
 	[opts, callback] = [{}, opts] if typeof opts is 'function'
 
@@ -20,18 +20,18 @@ csvParser = (file, opts, callback) ->
 	parser = null
 
 	async.series [
-		# detect charset	
-		(cb) ->			
+		# detect charset
+		(cb) ->
 			return cb() if charset?
 
 			stream = fs.createReadStream(file, { end: 5*1024 })
-			stream.on 'readable', () -> 
+			stream.on 'readable', () ->
 				return if charset?
 				buf = stream.read()
 				charset = jschardet.detect(buf)?.encoding
 				stream.close()
 				cb()
-	], (err) -> 
+	], (err) ->
 		return callback(err) if err?
 
 		csvOpts = { }
@@ -40,7 +40,7 @@ csvParser = (file, opts, callback) ->
 		csvOpts.trim = opts.trim || true
 		csvOpts.skip_empty_lines = opts.skip_empty_lines || true
 
-		p = 
+		p =
 			type: 'csv'
 			charset: charset
 			events: {}
@@ -48,7 +48,7 @@ csvParser = (file, opts, callback) ->
 			on: (event, cb) -> this.events[event] = cb
 
 			# start streaming
-			stream: () ->			
+			stream: () ->
 				return if parser?
 
 				parser = parse csvOpts
@@ -59,7 +59,7 @@ csvParser = (file, opts, callback) ->
 				errorCallback = this.events['error']
 
 				parser.on 'readable', () ->
-					row = parser.read()								
+					row = parser.read()
 					while (row?)
 						rowCallback(row) if rowCallback?
 						row = parser.read()
@@ -69,7 +69,7 @@ csvParser = (file, opts, callback) ->
 						endCallback() if endCallback()
 
 				parser.on 'error', (err) -> errorCallback(err) if errorCallback?
-					
+
 				p = stream
 				p = stream.pipe(iconv.decodeStream(charset)) if charset? and charset != 'utf-8'
 				p.pipe(parser)
@@ -81,10 +81,10 @@ csvParser = (file, opts, callback) ->
 				parser = parse csvOpts
 				stream = fs.createReadStream(file)
 
-				rows = [] 
+				rows = []
 
 				parser.on 'readable', () ->
-					row = parser.read()								
+					row = parser.read()
 					while (row?)
 						rows.push row
 						row = parser.read()
@@ -94,15 +94,15 @@ csvParser = (file, opts, callback) ->
 
 				p = stream
 				p = stream.pipe(iconv.decodeStream(charset)) if charset? and charset != 'utf-8'
-				p.pipe(parser)	
+				p.pipe(parser)
 
 		callback(null, p)
 
 ###############################################################################
 # Excel Parser
-# 
-# Parses Excel files using the js-xls and js-xlsx libraries. 
-# 
+#
+# Parses Excel files using the js-xls and js-xlsx libraries.
+#
 # Sheet. An integer number that specifies the requested sheet. Default 0.
 
 excelParser = (file, opts, callback) ->
@@ -115,13 +115,13 @@ excelParser = (file, opts, callback) ->
 	workbook = parser.readFile(file);
 
 	opts = _.clone(opts)
-	
+
 	if opts.range == 'auto'
 		# If there is an empty line along the 10 first lines, start
 		# after that
 
-		sheet = workbook.Sheets[workbook.SheetNames[opts.sheet || 0]] 
-		r = parser.utils.decode_range(sheet["!ref"]);		
+		sheet = workbook.Sheets[workbook.SheetNames[opts.sheet || 0]]
+		r = parser.utils.decode_range(sheet["!ref"]);
 
 		row = 0
 		while row < 10 and r.e.r > 10 #r.e.r
@@ -129,20 +129,20 @@ excelParser = (file, opts, callback) ->
 			if val == undefined
 				opts.range = row+1
 				break
-			row++		 
+			row++
 
 		delete opts.range if opts.range == 'auto'
 
 	if opts.header? and typeof opts.header is 'function' and not opts.range?
 		# conditionally assign header
-		sheet = workbook.Sheets[workbook.SheetNames[opts.sheet || 0]] 		
+		sheet = workbook.Sheets[workbook.SheetNames[opts.sheet || 0]]
 		rows = parser.utils.sheet_to_json(sheet, opts)
 
 		header = opts.header(rows)
-		delete opts.header 
+		delete opts.header
 		opts.header = header if header?
 		sheet = null
-			
+
 	p =
 		type: if parser == xls then 'xls' else 'xlsx'
 		events: {}
@@ -151,17 +151,17 @@ excelParser = (file, opts, callback) ->
 		columns: opts.columns || null
 
 		read: (callback) ->
-			sheet = workbook.Sheets[workbook.SheetNames[opts.sheet || 0]] unless sheet?		
+			sheet = workbook.Sheets[workbook.SheetNames[opts.sheet || 0]] unless sheet?
 			callback(null, parser.utils.sheet_to_json(sheet, opts))
 
-		stream: () ->			
+		stream: () ->
 			sheet = workbook.Sheets[workbook.SheetNames[opts.sheet || 0]] unless sheet?
 
 			rowCallback = this.events['row']
 			endCallback = this.events['end']
 			errorCallback = this.events['error']
 
-			for row in parser.utils.sheet_to_json(sheet, opts)						
+			for row in parser.utils.sheet_to_json(sheet, opts)
 				rowCallback(row) if rowCallback?
 
 			endCallback() if endCallback()
@@ -175,8 +175,8 @@ excelParser = (file, opts, callback) ->
 # Module exports
 #
 
-module.exports = 
-	
+module.exports =
+
 	create: (file, opts, callback) ->
 		[opts, callback] = [{}, opts] if typeof opts is 'function'
 
@@ -190,11 +190,10 @@ module.exports =
 			(cb) ->
 				parser = csvParser if file.toLowerCase().match(/(csv|txt)$/)
 				parser = excelParser if file.toLowerCase().match(/(xls|xlsx)$/)
-				cb()	
+				cb()
 
-		], (err) -> 
-			err = "Unknown file: '#{file}" unless parser?
+		], (err) ->
+			err = "Unknown file type: '#{file}'" unless parser?
 			return callback(err) if err?
 			parser(file, opts, callback)
-				
-		
+

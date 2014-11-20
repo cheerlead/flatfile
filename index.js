@@ -231,7 +231,7 @@ module.exports = {
       }
     ], function(err) {
       if (parser == null) {
-        err = "Unknown file: '" + file;
+        err = "Unknown file type: '" + file + "'";
       }
       if (err != null) {
         return callback(err);
