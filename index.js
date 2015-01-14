@@ -146,7 +146,11 @@ excelParser = function(file, opts, callback) {
   workbook = parser.readFile(file);
   opts = _.clone(opts);
   if (opts.range === 'auto') {
-    sheet = workbook.Sheets[workbook.SheetNames[opts.sheet || 0]];
+    sheet = opts.sheet || 0;
+    if (sheet === 'combine') {
+      sheet = 0;
+    }
+    sheet = workbook.Sheets[workbook.SheetNames[sheet || 0]];
     r = parser.utils.decode_range(sheet["!ref"]);
     row = 0;
     while (row < 10 && r.e.r > 10) {
@@ -179,15 +183,32 @@ excelParser = function(file, opts, callback) {
     },
     columns: opts.columns || null,
     read: function(callback) {
-      if (sheet == null) {
-        sheet = workbook.Sheets[workbook.SheetNames[opts.sheet || 0]];
+      var sheetName, sheetRows, _i, _len, _ref1;
+      if (opts.sheet === 'combine') {
+        rows = [];
+        _ref1 = workbook.SheetNames;
+        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+          sheetName = _ref1[_i];
+          console.log(sheetName);
+          sheet = workbook.Sheets[sheetName];
+          sheetRows = parser.utils.sheet_to_json(sheet, opts);
+          rows = rows.concat(sheetRows);
+        }
+        return callback(null, rows);
+      } else {
+        if (sheet == null) {
+          sheet = workbook.Sheets[workbook.SheetNames[opts.sheet || 0]];
+        }
+        return callback(null, parser.utils.sheet_to_json(sheet, opts));
       }
-      return callback(null, parser.utils.sheet_to_json(sheet, opts));
     },
     stream: function() {
       var endCallback, errorCallback, rowCallback, _i, _len, _ref1;
+      if (opts.sheet === 'combine') {
+        throw 'Combined sheets is not supported in streaming mode';
+      }
       if (sheet == null) {
-        sheet = workbook.Sheets[workbook.SheetNames[opts.sheet || 0]];
+        sheet = workbook.Sheets[workbook.SheetNames[sheet || 0]];
       }
       rowCallback = this.events['row'];
       endCallback = this.events['end'];

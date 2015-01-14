@@ -12,7 +12,7 @@ module.exports = (grunt) ->
 				ignoreLeaks: false
 				ui: 'bdd'
 				reporter: 'spec'
-				#grep: 'conditionally'
+				#grep: 'Combine'
 
 			all: { src: ['test/*.coffee'] }
 

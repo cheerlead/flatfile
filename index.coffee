@@ -120,7 +120,10 @@ excelParser = (file, opts, callback) ->
 		# If there is an empty line along the 10 first lines, start
 		# after that
 
-		sheet = workbook.Sheets[workbook.SheetNames[opts.sheet || 0]]
+		sheet = opts.sheet || 0
+		sheet = 0 if sheet == 'combine'
+
+		sheet = workbook.Sheets[workbook.SheetNames[sheet || 0]]
 		r = parser.utils.decode_range(sheet["!ref"]);
 
 		row = 0
@@ -151,11 +154,22 @@ excelParser = (file, opts, callback) ->
 		columns: opts.columns || null
 
 		read: (callback) ->
-			sheet = workbook.Sheets[workbook.SheetNames[opts.sheet || 0]] unless sheet?
-			callback(null, parser.utils.sheet_to_json(sheet, opts))
+			if opts.sheet == 'combine'
+				rows = []
+				for sheetName in workbook.SheetNames
+					console.log sheetName
+					sheet = workbook.Sheets[sheetName]
+					sheetRows = parser.utils.sheet_to_json(sheet, opts)
+					rows = rows.concat sheetRows
+				callback(null, rows)
+			else
+				sheet = workbook.Sheets[workbook.SheetNames[opts.sheet || 0]] unless sheet?
+				callback(null, parser.utils.sheet_to_json(sheet, opts))
 
 		stream: () ->
-			sheet = workbook.Sheets[workbook.SheetNames[opts.sheet || 0]] unless sheet?
+			throw 'Combined sheets is not supported in streaming mode' if opts.sheet == 'combine'
+
+			sheet = workbook.Sheets[workbook.SheetNames[sheet || 0]] unless sheet?
 
 			rowCallback = this.events['row']
 			endCallback = this.events['end']
