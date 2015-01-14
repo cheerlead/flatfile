@@ -1,6 +1,6 @@
 {
   "name": "flatfile",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A common way to access data in flat files (e.g. CSV and Excel files)",
   "main": "index.js",
   "scripts": {
